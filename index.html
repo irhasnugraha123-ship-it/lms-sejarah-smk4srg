@@ -1,0 +1,85 @@
+<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LMS Sejarah SMK V5</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f4f7fb;color:#172033;font:15px Arial,sans-serif}.hidden{display:none!important}.top{background:#fff;padding:16px 5%;border-bottom:1px solid #e5e9f1;display:flex;justify-content:space-between;align-items:center}.wrap{width:min(1100px,92%);margin:25px auto}.login{min-height:100vh;display:grid;place-items:center}.loginbox,.card{background:#fff;border-radius:20px;padding:24px;box-shadow:0 10px 35px #17203312}.loginbox{width:min(450px,92%)}h1,h2,h3{margin-top:0}.logo{text-align:center;font-size:52px}input,select,textarea{width:100%;padding:12px;margin:5px 0 9px;border:1px solid #dfe4ee;border-radius:10px;font:inherit}textarea{min-height:170px}button{border:0;background:#3157d5;color:#fff;padding:11px 15px;border-radius:10px;font-weight:bold;cursor:pointer;margin:4px 2px}button.alt{background:#eaf0ff;color:#3157d5}button.bad{background:#ffeceb;color:#b52e24}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:15px}.hero{background:linear-gradient(135deg,#243fa0,#5b78e6);color:#fff;padding:28px;border-radius:20px;margin-bottom:20px}.badge{display:inline-block;background:#eaf0ff;color:#3157d5;padding:5px 9px;border-radius:999px;font-size:12px;font-weight:bold}.muted{color:#687386}.msg{min-height:22px}.ok{color:#16834d}.err{color:#c0392b}.notice{background:#fff8df;padding:12px;border-radius:10px}.table{overflow:auto}.table table{width:100%;border-collapse:collapse;background:#fff}.table th,.table td{padding:11px;border-bottom:1px solid #e7eaf0;text-align:left;vertical-align:top}.camera{background:#101828;border-radius:18px;padding:10px}.camera video{width:100%;max-height:420px;object-fit:cover;border-radius:12px;display:block}.preview{width:100%;border-radius:12px}.absbuttons{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.absbuttons button{padding:18px;font-size:16px}.modal{position:fixed;inset:0;background:#0009;display:grid;place-items:center;padding:18px}.modalbox{background:#fff;border-radius:20px;width:min(650px,100%);max-height:94vh;overflow:auto;padding:22px}.close{float:right;border-radius:50%;background:#eee;color:#222;width:36px;height:36px;padding:0;font-size:20px}.tabs{display:flex;gap:6px}.tabs button{flex:1}
+</style></head><body>
+<section id="login" class="login"><div class="loginbox"><div class="logo">🏛️</div><h1 style="text-align:center">LMS SEJARAH SMK</h1><p class="muted" style="text-align:center">V5 • Absensi Selfie • Verifikasi Admin</p><div class="tabs"><button onclick="tab('login')">Masuk</button><button class="alt" onclick="tab('reg')">Daftar Siswa</button></div>
+<div id="loginBox"><form id="lf"><input id="lu" placeholder="Username / NIS" required><input id="lp" type="password" placeholder="Password" required><button style="width:100%">🔐 Masuk</button></form></div>
+<div id="regBox" class="hidden"><form id="rf"><input id="nis" placeholder="NIS" required><input id="nama" placeholder="Nama lengkap" required><input id="kelas" placeholder="Kelas, contoh X TKR 2" required><input id="jurusan" placeholder="Jurusan/Konsentrasi" required><input id="ru" placeholder="Username" required><input id="rp" type="password" placeholder="Password" required><button style="width:100%">📝 Daftar</button></form></div><div id="am" class="msg"></div><small class="muted">Akun baru harus diverifikasi admin sebelum bisa login.</small></div></section>
+<section id="app" class="hidden"><header class="top"><div><b>🏛️ LMS SEJARAH SMK</b><br><small id="who"></small></div><button class="alt" onclick="logout()">Keluar</button></header><main class="wrap">
+<div id="siswa" class="hidden"><div class="hero"><h1>Halo 👋</h1><p>Gunakan kamera untuk membuat bukti selfie absensi.</p></div><div class="card"><h2>📸 Absensi Selfie</h2><div class="absbuttons"><button onclick="camera('DATANG')">🟢 ABSEN DATANG</button><button onclick="camera('DHUHA')">☀️ ABSEN DHUHA</button><button onclick="camera('ASHAR')">🌇 ABSEN ASHAR</button><button onclick="camera('PULANG')">🔴 ABSEN PULANG</button></div></div><div class="card" style="margin-top:15px"><h2>📅 Riwayat Absensi</h2><div id="myabs"></div></div><div class="card" style="margin-top:15px"><h2>📚 Tugas</h2><div id="tasks" class="grid"></div></div><div class="card" style="margin-top:15px"><h2>💯 Nilai</h2><div id="results" class="grid"></div></div></div>
+<div id="guru" class="hidden"><div class="hero"><h1>Dashboard Admin 👨‍🏫</h1><p>Verifikasi siswa, nilai tugas, dan pantau bukti absensi selfie.</p><button onclick="passwordModal()">🔐 Ganti Password</button></div><div class="card"><h2>⏳ Verifikasi Siswa</h2><div id="pending"></div></div><div class="card" style="margin-top:15px"><h2>📝 Jawaban Siswa</h2><div id="answers"></div></div><div class="card" style="margin-top:15px"><h2>📸 Rekap Absensi</h2><div id="allabs"></div></div></div>
+</main></section>
+<div id="modal" class="modal hidden"><div class="modalbox"><button class="close" onclick="closeM()">×</button><h2 id="mt"></h2><div id="mb"></div></div></div>
+<script>
+const GAS_URL="https://script.google.com/macros/s/AKfycbwXPGfCSxmjGV4QXJH1aj0CesgkrfXgujGvLixHd4SMBIdomL9Dj1fazaVAPib6Kpxgag/exec";let user=null,stream=null,jenisAbs="";
+const $=id=>document.getElementById(id), esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+function api(p){return new Promise((res,rej)=>{if(GAS_URL.includes("PASTE_URL"))return rej(Error("GAS_URL belum diisi."));const c="cb"+Date.now(),s=document.createElement("script");window[c]=d=>{delete window[c];s.remove();res(d)};s.onerror=()=>{delete window[c];s.remove();rej(Error("Gagal terhubung Apps Script."))};s.src=GAS_URL+"?"+new URLSearchParams({...p,callback:c});document.body.appendChild(s)})}
+async function hash(t){return [...new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t)))].map(x=>x.toString(16).padStart(2,"0")).join("")}
+function tab(x){$("loginBox").classList.toggle("hidden",x!=="login");$("regBox").classList.toggle("hidden",x!=="reg");$("am").textContent=""}
+$("rf").onsubmit=async e=>{e.preventDefault();try{const d=await api({action:"register",nis:nis.value,nama:nama.value,kelas:kelas.value,jurusan:jurusan.value,username:ru.value,password_hash:await hash(rp.value)});if(!d.ok)throw Error(d.error);$("am").textContent="✅ "+d.message;$("am").className="msg ok";e.target.reset();tab("login")}catch(x){$("am").textContent=x.message;$("am").className="msg err"}};
+$("lf").onsubmit=async e=>{e.preventDefault();try{const d=await api({action:"login",username:lu.value,password_hash:await hash(lp.value)});if(!d.ok)throw Error(d.error);user=d.user;localStorage.lms5=JSON.stringify(user);show()}catch(x){$("am").textContent=x.message;$("am").className="msg err"}};
+function show(){$("login").classList.add("hidden");$("app").classList.remove("hidden");$("who").textContent=`${user.nama} • ${user.role} • ${user.kelas}`;const g=user.role==="GURU";$("siswa").classList.toggle("hidden",g);$("guru").classList.toggle("hidden",!g);g?(loadPending(),loadAnswers(),loadAllAbs()):(loadMyAbs(),loadTasks(),loadResults())}
+function logout(){localStorage.removeItem("lms5");location.reload()}
+async function camera(j){jenisAbs=j;try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"user"},audio:false});$("mt").textContent="📸 "+j+" — Ambil Selfie";$("mb").innerHTML=`<div class="camera"><video id="vid" autoplay playsinline></video></div><button onclick="snap()">📷 Ambil Foto</button><div id="cm" class="msg"></div>`;$("modal").classList.remove("hidden");$("vid").srcObject=stream}catch(x){alert("Kamera tidak bisa dibuka. Pastikan GitHub Pages HTTPS dan izin kamera diberikan.")}}
+function snap(){const v=$("vid"),c=document.createElement("canvas");const max=1000,scale=Math.min(1,max/v.videoWidth);c.width=v.videoWidth*scale;c.height=v.videoHeight*scale;c.getContext("2d").drawImage(v,0,0,c.width,c.height);const data=c.toDataURL("image/jpeg",.75);if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}$("mb").innerHTML=`<img class="preview" src="${data}"><div id="cm" class="msg"></div><button onclick="sendAbs('${data}')">✅ Kirim Bukti Selfie</button><button class="alt" onclick="camera('${jenisAbs}')">🔄 Foto Ulang</button>`}
+async function sendAbs(img){$("cm").textContent="Mengirim foto...";try{const d=await api({action:"absen",user_id:user.id,jenis:jenisAbs,image:img});if(!d.ok)throw Error(d.error);$("cm").textContent="✅ "+d.message; $("cm").className="msg ok";loadMyAbs()}catch(x){$("cm").textContent=x.message;$("cm").className="msg err"}}
+function closeM(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}$("modal").classList.add("hidden")}
+async function loadMyAbs(){const d=await api({action:"myattendance",user_id:user.id});$("myabs").innerHTML=`<div class="table"><table><tr><th>Tanggal</th><th>Jam</th><th>Jenis</th><th>Bukti</th></tr>${(d.data||[]).map(x=>`<tr><td>${esc(x.TANGGAL)}</td><td>${esc(x.JAM)}</td><td>${esc(x.JENIS)}</td><td><a href="${esc(x.FOTO_URL)}" target="_blank">📷 Lihat</a></td></tr>`).join("")}</table></div>`||"Belum ada absensi."}
+async function loadTasks(){const d=await api({action:"tasks",kelas:user.kelas});$("tasks").innerHTML=(d.tasks||[]).map(t=>`<div class="card"><span class="badge">${esc(t.JENIS)}</span><h3>${esc(t.JUDUL)}</h3><p>${esc(t.DESKRIPSI)}</p><button onclick="doTask('${t.ID_TUGAS}','${esc(t.JUDUL)}')">✍️ Kerjakan</button></div>`).join("")||"Belum ada tugas."}
+function doTask(id,title){$("mt").textContent=title;$("mb").innerHTML=`<textarea id="ans" placeholder="Tulis jawaban..."></textarea><div id="tm" class="msg"></div><button onclick="sendTask('${id}')">🚀 Kirim</button>`;$("modal").classList.remove("hidden")}
+async function sendTask(id){try{const d=await api({action:"submit",user_id:user.id,task_id:id,answer:$("ans").value});if(!d.ok)throw Error(d.error);$("tm").textContent=d.message;$("tm").className="msg ok";loadResults()}catch(x){$("tm").textContent=x.message;$("tm").className="msg err"}}
+async function loadResults(){const d=await api({action:"myresults",user_id:user.id});$("results").innerHTML=(d.results||[]).map(x=>`<div class="card"><b>${esc(x.ID_TUGAS)}</b><h3>${esc(x.NAMA)}</h3><strong style="font-size:30px">${esc(x.SKOR_FINAL)}</strong><p>${esc(x.CATATAN_GURU||"Belum ada catatan.")}</p></div>`).join("")||"Belum ada nilai."}
+async function changePassword(e){
+ e.preventDefault();
+ const msg=$("cpm");
+ if($("newpass").value!==$("newpass2").value){
+   msg.textContent="Password baru dan ulangi password harus sama.";
+   msg.className="msg err"; return;
+ }
+ if($("newpass").value.length<8){
+   msg.textContent="Password baru minimal 8 karakter.";
+   msg.className="msg err"; return;
+ }
+ try{
+   const d=await api({
+     action:"changepassword",
+     role:user.role,
+     user_id:user.id,
+     old_password_hash:await hash($("oldpass").value),
+     new_password_hash:await hash($("newpass").value)
+   });
+   if(!d.ok) throw Error(d.error);
+   msg.textContent="✅ "+d.message;
+   msg.className="msg ok";
+   setTimeout(()=>logout(),1200);
+ }catch(x){
+   msg.textContent="❌ "+x.message;
+   msg.className="msg err";
+ }
+}
+
+async function loadPending(){const d=await api({action:"pendingusers",role:user.role});$("pending").innerHTML=(d.users||[]).length?`<div class="table"><table><tr><th>NIS</th><th>Nama</th><th>Kelas</th><th>Jurusan</th><th>Aksi</th></tr>${d.users.map(x=>`<tr><td>${esc(x.NIS)}</td><td>${esc(x.NAMA)}</td><td>${esc(x.KELAS)}</td><td>${esc(x.JURUSAN)}</td><td><button onclick="verify('${x.ID}','AKTIF')">✅ Terima</button><button class="bad" onclick="verify('${x.ID}','DITOLAK')">❌ Tolak</button></td></tr>`).join("")}</table></div>`:"Tidak ada pendaftaran pending."}
+async function verify(id,dec){const d=await api({action:"verifyuser",role:user.role,user_id:id,decision:dec,admin_name:user.nama});alert(d.message||d.error);loadPending()}
+async function loadAnswers(){const d=await api({action:"allanswers",role:user.role});$("answers").innerHTML=`<div class="table"><table><tr><th>Siswa</th><th>Jawaban</th><th>Nilai</th><th>Aksi</th></tr>${(d.data||[]).map(x=>`<tr><td>${esc(x.answer.NAMA)}</td><td>${esc(x.answer.JAWABAN)}</td><td>${x.score?esc(x.score.SKOR_FINAL):"-"}</td><td><button onclick="review('${x.answer.ID_JAWABAN}','${x.score?x.score.SKOR_FINAL:""}')">Nilai</button></td></tr>`).join("")}</table></div>`}
+function review(id,old){$("mt").textContent="Nilai Guru";$("mb").innerHTML=`<input id="score" type="number" min="0" max="100" value="${old}" placeholder="0-100"><textarea id="note" placeholder="Catatan guru"></textarea><div id="rm" class="msg"></div><button onclick="saveReview('${id}')">💾 Simpan</button>`;$("modal").classList.remove("hidden")}
+async function saveReview(id){const d=await api({action:"review",role:user.role,answer_id:id,final_score:$("score").value,note:$("note").value});$("rm").textContent=d.message||d.error;loadAnswers()}
+async function loadAllAbs(){const d=await api({action:"allattendance",role:user.role});$("allabs").innerHTML=`<div class="table"><table><tr><th>Tanggal</th><th>Jam</th><th>Siswa</th><th>Kelas</th><th>Jenis</th><th>Bukti</th></tr>${(d.data||[]).map(x=>`<tr><td>${esc(x.TANGGAL)}</td><td>${esc(x.JAM)}</td><td>${esc(x.NAMA)}<br>${esc(x.NIS)}</td><td>${esc(x.KELAS)}</td><td>${esc(x.JENIS)}</td><td><a href="${esc(x.FOTO_URL)}" target="_blank">📷 Foto</a></td></tr>`).join("")}</table></div>`}
+
+function passwordModal(){
+ $("mt").textContent="🔐 Ganti Password Admin";
+ $("mb").innerHTML=`<input id="oldpw" type="password" placeholder="Password lama" autocomplete="current-password"><input id="newpw" type="password" placeholder="Password baru (minimal 6 karakter)" autocomplete="new-password"><input id="newpw2" type="password" placeholder="Ulangi password baru" autocomplete="new-password"><div id="pmsg" class="msg"></div><button onclick="savePassword()">💾 Simpan Password</button>`;
+ $("modal").classList.remove("hidden");
+}
+async function savePassword(){
+ const a=$("oldpw").value,b=$("newpw").value,c=$("newpw2").value;
+ if(b.length<6){$("pmsg").textContent="Password baru minimal 6 karakter.";$("pmsg").className="msg err";return}
+ if(b!==c){$("pmsg").textContent="Ulangan password tidak sama.";$("pmsg").className="msg err";return}
+ try{
+  const d=await api({action:"changepassword",role:user.role,user_id:user.id,old_password_hash:await hash(a),new_password_hash:await hash(b)});
+  $("pmsg").textContent=d.message||d.error;$("pmsg").className="msg "+(d.ok?"ok":"err");
+  if(d.ok)setTimeout(()=>{logout()},1200);
+ }catch(x){$("pmsg").textContent=x.message;$("pmsg").className="msg err"}
+}
+
+try{user=JSON.parse(localStorage.lms5||"null");if(user)show()}catch(e){}
+</script></body></html>
